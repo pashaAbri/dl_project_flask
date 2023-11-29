@@ -1,12 +1,11 @@
 from flask import Flask
+from routes import bp as bp_routes
 
 app = Flask(__name__)
 
-
-@app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello GU AI!'
+# register the routes blueprint
+app.register_blueprint(bp_routes)
 
 
 if __name__ == '__main__':
-    app.run()
+  app.run(debug=True)
