@@ -1,4 +1,7 @@
 from flask import Blueprint, request, jsonify
+import io
+from PyPDF2 import PdfReader
+
 
 bp = Blueprint("routes", __name__)
 
@@ -195,3 +198,37 @@ def get_receipts():
         }
     ]
     return jsonify(receipts_data)
+
+
+@bp.route('/upload/pdf', methods=['POST'])
+def upload_file():
+    # Check if the POST request contains a file part
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+
+    # If the user does not select a file, the browser submits an empty part without a filename
+    if file.filename == '':
+        return jsonify({'message': 'No selected file'}), 400
+
+    # Check if the file has a PDF extension
+    if not file.filename.lower().endswith('.pdf'):
+        return jsonify({'message': 'File must have a .pdf extension'}), 400
+
+    # Read the content of the uploaded PDF file and extract text
+    pdf_content = file.read()
+    pdf_text = extract_text_from_pdf(pdf_content)
+
+    # Process the extracted text into an array of strings (e.g., splitting by lines)
+    # Modify this part based on your specific processing needs
+    pdf_lines = pdf_text.split('\n')
+
+    return jsonify({'message': 'PDF file processed successfully', 'lines': pdf_lines})
+
+def extract_text_from_pdf(pdf_content):
+    pdf_reader = PdfReader(io.BytesIO(pdf_content))
+    text = ''
+    for page in pdf_reader.pages:
+        text += page.extract_text()
+    return text
